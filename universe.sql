@@ -21,15 +21,52 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
+-- Name: asteroid; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.asteroid (
+    asteroid_id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    diameter_km integer NOT NULL,
+    is_hazardous boolean NOT NULL
+);
+
+
+ALTER TABLE public.asteroid OWNER TO postgres;
+
+--
+-- Name: asteroid_asteroid_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.asteroid_asteroid_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.asteroid_asteroid_id_seq OWNER TO postgres;
+
+--
+-- Name: asteroid_asteroid_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.asteroid_asteroid_id_seq OWNED BY public.asteroid.asteroid_id;
+
+
+--
 -- Name: galaxy; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.galaxy (
     galaxy_id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    galaxy_type text NOT NULL,
-    age_in_millions_of_years integer NOT NULL,
-    is_active boolean NOT NULL
+    name character varying(50) NOT NULL,
+    galaxy_type character varying(50) NOT NULL,
+    age_in_billions numeric NOT NULL,
+    has_black_hole boolean NOT NULL,
+    number_of_stars integer NOT NULL
 );
 
 
@@ -63,10 +100,11 @@ ALTER SEQUENCE public.galaxy_galaxy_id_seq OWNED BY public.galaxy.galaxy_id;
 
 CREATE TABLE public.moon (
     moon_id integer NOT NULL,
-    name character varying(100) NOT NULL,
+    name character varying(50) NOT NULL,
     planet_id integer NOT NULL,
-    diameter integer NOT NULL,
-    is_spherical boolean NOT NULL
+    moon_type character varying(50) NOT NULL,
+    diameter_km integer NOT NULL,
+    description text NOT NULL
 );
 
 
@@ -100,9 +138,10 @@ ALTER SEQUENCE public.moon_moon_id_seq OWNED BY public.moon.moon_id;
 
 CREATE TABLE public.planet (
     planet_id integer NOT NULL,
-    name character varying(100) NOT NULL,
+    name character varying(50) NOT NULL,
     star_id integer NOT NULL,
-    planet_type text NOT NULL,
+    planet_type character varying(50) NOT NULL,
+    diameter_km integer NOT NULL,
     has_life boolean NOT NULL
 );
 
@@ -132,50 +171,15 @@ ALTER SEQUENCE public.planet_planet_id_seq OWNED BY public.planet.planet_id;
 
 
 --
--- Name: spacecraft; Type: TABLE; Schema: public; Owner: postgres
---
-
-CREATE TABLE public.spacecraft (
-    spacecraft_id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    mission text NOT NULL,
-    active boolean NOT NULL
-);
-
-
-ALTER TABLE public.spacecraft OWNER TO postgres;
-
---
--- Name: spacecraft_spacecraft_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-CREATE SEQUENCE public.spacecraft_spacecraft_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.spacecraft_spacecraft_id_seq OWNER TO postgres;
-
---
--- Name: spacecraft_spacecraft_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
---
-
-ALTER SEQUENCE public.spacecraft_spacecraft_id_seq OWNED BY public.spacecraft.spacecraft_id;
-
-
---
 -- Name: star; Type: TABLE; Schema: public; Owner: postgres
 --
 
 CREATE TABLE public.star (
     star_id integer NOT NULL,
-    name character varying(100) NOT NULL,
+    name character varying(50) NOT NULL,
     galaxy_id integer NOT NULL,
-    mass numeric NOT NULL,
+    star_type character varying(50) NOT NULL,
+    mass integer NOT NULL,
     is_visible boolean NOT NULL
 );
 
@@ -205,6 +209,13 @@ ALTER SEQUENCE public.star_star_id_seq OWNED BY public.star.star_id;
 
 
 --
+-- Name: asteroid asteroid_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.asteroid ALTER COLUMN asteroid_id SET DEFAULT nextval('public.asteroid_asteroid_id_seq'::regclass);
+
+
+--
 -- Name: galaxy galaxy_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -226,13 +237,6 @@ ALTER TABLE ONLY public.planet ALTER COLUMN planet_id SET DEFAULT nextval('publi
 
 
 --
--- Name: spacecraft spacecraft_id; Type: DEFAULT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.spacecraft ALTER COLUMN spacecraft_id SET DEFAULT nextval('public.spacecraft_spacecraft_id_seq'::regclass);
-
-
---
 -- Name: star star_id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
@@ -240,16 +244,27 @@ ALTER TABLE ONLY public.star ALTER COLUMN star_id SET DEFAULT nextval('public.st
 
 
 --
+-- Data for Name: asteroid; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.asteroid (asteroid_id, name, diameter_km, is_hazardous) FROM stdin;
+1	Ceres	939	f
+2	Vesta	525	f
+3	Pallas	512	f
+\.
+
+
+--
 -- Data for Name: galaxy; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.galaxy (galaxy_id, name, galaxy_type, age_in_millions_of_years, is_active) FROM stdin;
-1	Milky Way	Spiral	13600	t
-2	Andromeda	Spiral	10000	t
-3	Triangulum	Spiral	8000	t
-4	Whirlpool	Spiral	9000	t
-5	Sombrero	Spiral	10000	t
-6	Cartwheel	Ring	5000	t
+COPY public.galaxy (galaxy_id, name, galaxy_type, age_in_billions, has_black_hole, number_of_stars) FROM stdin;
+1	Milky Way	Spiral	13.6	t	200000
+2	Andromeda	Spiral	10.0	t	1000000
+3	Triangulum	Spiral	13.3	t	40000
+4	Whirlpool	Spiral	8.0	t	100000
+5	Sombrero	Spiral	9.0	t	100000
+6	Cartwheel	Ring	5.0	t	20000
 \.
 
 
@@ -257,27 +272,27 @@ COPY public.galaxy (galaxy_id, name, galaxy_type, age_in_millions_of_years, is_a
 -- Data for Name: moon; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.moon (moon_id, name, planet_id, diameter, is_spherical) FROM stdin;
-1	Moon	3	3474	t
-2	Phobos	4	22	f
-3	Deimos	4	12	f
-4	Io	5	3643	t
-5	Europa	5	3122	t
-6	Ganymede	5	5268	t
-7	Callisto	5	4821	t
-8	Titan	6	5150	t
-9	Rhea	6	1528	t
-10	Enceladus	6	504	t
-11	Mimas	6	396	t
-12	Iapetus	6	1469	t
-13	Triton	7	2706	t
-14	Oberon	8	1523	t
-15	Titania	8	1578	t
-16	Ariel	8	1158	t
-17	Umbriel	8	1169	t
-18	KeplerMoon1	9	500	t
-19	KeplerMoon2	10	600	t
-20	PolarisMoon	11	700	t
+COPY public.moon (moon_id, name, planet_id, moon_type, diameter_km, description) FROM stdin;
+1	Moon	1	Natural Satellite	3475	Earths natural satellite
+2	Phobos	4	Natural Satellite	23	Moon of Mars
+3	Deimos	4	Natural Satellite	13	Moon of Mars
+4	Io	5	Volcanic	3643	Volcanically active moon
+5	Europa	5	Icy	3122	Icy moon of Jupiter
+6	Ganymede	5	Icy	5268	Largest moon in the solar system
+7	Callisto	5	Icy	4821	Heavily cratered moon
+8	Titan	6	Icy	5150	Moon with a thick atmosphere
+9	Rhea	6	Icy	1528	Moon of Saturn
+10	Iapetus	6	Icy	1469	Two-tone moon
+11	Dione	6	Icy	1123	Moon of Saturn
+12	Tethys	6	Icy	1062	Moon of Saturn
+13	Enceladus	6	Icy	504	Moon with icy geysers
+14	Mimas	6	Icy	396	Small moon of Saturn
+15	Titania	7	Icy	1578	Moon of Uranus
+16	Oberon	7	Icy	1523	Moon of Uranus
+17	Ariel	7	Icy	1158	Moon of Uranus
+18	Umbriel	7	Icy	1169	Moon of Uranus
+19	Triton	8	Icy	2707	Largest moon of Neptune
+20	Nereid	8	Icy	340	Moon of Neptune
 \.
 
 
@@ -285,30 +300,19 @@ COPY public.moon (moon_id, name, planet_id, diameter, is_spherical) FROM stdin;
 -- Data for Name: planet; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.planet (planet_id, name, star_id, planet_type, has_life) FROM stdin;
-1	Mercury	1	Terrestrial	f
-2	Venus	1	Terrestrial	f
-3	Earth	1	Terrestrial	t
-4	Mars	1	Terrestrial	f
-5	Jupiter	1	Gas Giant	f
-6	Saturn	1	Gas Giant	f
-7	Neptune	2	Ice Giant	f
-8	Uranus	2	Ice Giant	f
-9	Kepler-1b	3	Gas Giant	f
-10	Kepler-2b	3	Gas Giant	f
-11	Polaris-b	4	Gas Giant	f
-12	Rigel-b	6	Gas Giant	f
-\.
-
-
---
--- Data for Name: spacecraft; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-COPY public.spacecraft (spacecraft_id, name, mission, active) FROM stdin;
-1	Voyager 1	Interstellar Mission	t
-2	Voyager 2	Interstellar Mission	t
-3	James Webb	Deep Space Observation	t
+COPY public.planet (planet_id, name, star_id, planet_type, diameter_km, has_life) FROM stdin;
+1	Earth	1	Terrestrial	12742	t
+2	Mercury	1	Terrestrial	4879	f
+3	Venus	1	Terrestrial	12104	f
+4	Mars	1	Terrestrial	6779	f
+5	Jupiter	1	Gas Giant	139820	f
+6	Saturn	1	Gas Giant	116460	f
+7	Uranus	1	Ice Giant	50724	f
+8	Neptune	1	Ice Giant	49244	f
+9	Planet Alpha	2	Terrestrial	15000	f
+10	Planet Beta	2	Gas Giant	90000	f
+11	Planet Gamma	3	Terrestrial	11000	f
+12	Planet Delta	4	Terrestrial	8000	f
 \.
 
 
@@ -316,14 +320,21 @@ COPY public.spacecraft (spacecraft_id, name, mission, active) FROM stdin;
 -- Data for Name: star; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.star (star_id, name, galaxy_id, mass, is_visible) FROM stdin;
-1	Sun	1	1.0	t
-2	Sirius	1	2.02	t
-3	Vega	1	2.14	t
-4	Polaris	2	5.4	t
-5	Betelgeuse	2	18.0	t
-6	Rigel	3	21.0	t
+COPY public.star (star_id, name, galaxy_id, star_type, mass, is_visible) FROM stdin;
+1	Sun	1	Yellow Dwarf	1	t
+2	Sirius	1	Main Sequence	2	t
+3	Betelgeuse	1	Red Supergiant	20	t
+4	Proxima Centauri	1	Red Dwarf	1	t
+5	Alpha Andromedae	2	Binary	4	t
+6	Mirach	2	Red Giant	3	t
 \.
+
+
+--
+-- Name: asteroid_asteroid_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.asteroid_asteroid_id_seq', 3, true);
 
 
 --
@@ -348,17 +359,26 @@ SELECT pg_catalog.setval('public.planet_planet_id_seq', 12, true);
 
 
 --
--- Name: spacecraft_spacecraft_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
---
-
-SELECT pg_catalog.setval('public.spacecraft_spacecraft_id_seq', 3, true);
-
-
---
 -- Name: star_star_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
 SELECT pg_catalog.setval('public.star_star_id_seq', 6, true);
+
+
+--
+-- Name: asteroid asteroid_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.asteroid
+    ADD CONSTRAINT asteroid_name_key UNIQUE (name);
+
+
+--
+-- Name: asteroid asteroid_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.asteroid
+    ADD CONSTRAINT asteroid_pkey PRIMARY KEY (asteroid_id);
 
 
 --
@@ -407,22 +427,6 @@ ALTER TABLE ONLY public.planet
 
 ALTER TABLE ONLY public.planet
     ADD CONSTRAINT planet_pkey PRIMARY KEY (planet_id);
-
-
---
--- Name: spacecraft spacecraft_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.spacecraft
-    ADD CONSTRAINT spacecraft_name_key UNIQUE (name);
-
-
---
--- Name: spacecraft spacecraft_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
---
-
-ALTER TABLE ONLY public.spacecraft
-    ADD CONSTRAINT spacecraft_pkey PRIMARY KEY (spacecraft_id);
 
 
 --
